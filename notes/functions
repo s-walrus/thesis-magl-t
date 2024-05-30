@@ -1,0 +1,84 @@
+-- arithmetic
+
+add/sub/mult/div: Arithmetic -> Arithmetic -> Arithmetic
+neg: Arithmetic -> Arithmetic
+pow
+log
+...
+
+
+-- list/dict operators
+
+get: List[X] -> Uint -> X
+append: List[X] -> X -> List[X]
+
+put: Dict[X] -> String -> X -> Dict[X]
+put: Schema{...} -> key -> X -> Schema{..., key: X}
+???
+
+Schema := String -> Any
+???
+
+
+-- collection transformators
+
+Apply : List[X] -> (X -> Y) -> List[Y]
+Accumulate : List[X] -> Y -> (Y -> X -> Y) -> Y
+
+
+-- dict vs schema
+
+{"a": 1, "b": 2, "c": 42} : Object[Int]
+
+{"name": "John", "age": 42, "is_client": false}
+    : Schema{"name": String, "age": Int, "is_client": Bool}
+
+SchemaToDict[X]: Schema{...} -> Dict[X]
+
+t : Schema{k: X, ..., k: X}
+---------------------------
+SchemaToDict t : Dict[X]
+
+SchemaToDict Schema{"name": "John", "age_str": "42"}
+    : Dict[Any]
+    : Dict[Str]
+
+
+-- need HM's let?
+
+Apply: Dict[X] -> (X -> Y) -> Dict[Y]
+Apply: Schema{"age": Int, "name": String} -> ()
+
+let triple_add = lambda xyz . add(add(x, y), z) in triple_add(in_x, in_y, in_z)
+
+
+-- if
+
+"result": {
+    "response.$": |
+        If (code == 200) then MakeResponseOK(body.age) else MakeError(code, body.message)
+    "code": code
+}
+
+"preconditions": {
+    result.code is 200
+}
+"headers": {
+    "response.$": |
+        If (that_code == 200) then (response) else ()
+        ^  надо на этапе статического анализа знать значение параметров типа,
+           чтобы снимать зависимость типа.
+           Либо прописывать зависимость в схеме вычисляемой структуры.
+}
+
+result.response : (code: Int) -> (If (code == 200) then Int else String)
+
+headers.response : result.response[result.code]
+
+response : (code: Int) -> (If (code == 200)
+                           then {"status": String, "age": Int}
+                           else {"status": String, "code": Int, "message": String})
+
+"result.$": |
+    response[200]
+
